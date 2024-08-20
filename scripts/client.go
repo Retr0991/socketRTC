@@ -1,5 +1,5 @@
 // socket-client project main.go
-package main    
+package main
 
 import (
 	"bufio"
@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	SERVER_HOST = "192.168.87.167"
-	SERVER_PORT = "9988"                            
+	SERVER_HOST = "localhost"
+	SERVER_PORT = "9988"
 	SERVER_TYPE = "tcp"
 )
 
@@ -23,18 +23,21 @@ func main() {
 	}
 	///send some data from the terminal for now
 	reader := bufio.NewReader(os.Stdin)
-	flag := true
-	for flag {
+	for {
 		input, _ := reader.ReadString('\n')
 		_, err = connection.Write([]byte(input))
-		buffer := make([]byte, 1024)
-		mLen, err := connection.Read(buffer)
 		if err != nil {
-			fmt.Println("Error reading:", err.Error())
+			fmt.Println("Error writing:", err.Error())
+			break
 		}
-		fmt.Println("Received: ", string(buffer[:mLen]))
-		if strings.ToLower(input) == "bye" {
-			flag = false
+		// buffer := make([]byte, 1024)
+		// mLen, err := connection.Read(buffer)
+		// if err != nil {
+		// 	fmt.Println("Error :", err.Error())
+		// }
+		fmt.Println("Received")
+		if strings.ToLower(input) == "bye\n" {
+			break
 		}
 	}
 	defer connection.Close()
