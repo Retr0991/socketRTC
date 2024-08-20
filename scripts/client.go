@@ -1,5 +1,5 @@
 // socket-client project main.go
-package main
+package main    
 
 import (
 	"bufio"
@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	SERVER_HOST = "localhost"
-	SERVER_PORT = "9988"
+	SERVER_HOST = "192.168.87.167"
+	SERVER_PORT = "9988"                            
 	SERVER_TYPE = "tcp"
 )
 
@@ -21,7 +21,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	///send some data from the terminal for now                                                             
+	///send some data from the terminal for now
 	reader := bufio.NewReader(os.Stdin)
 	flag := true
 	for flag {
