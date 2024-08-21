@@ -2,6 +2,7 @@
 package main
 
 import (
+	"github.com/splode/fname"
 	"fmt"
 	"net"
 	"os"
@@ -23,13 +24,16 @@ func main() {
 	defer server.Close()
 	fmt.Println("Listening on " + SERVER_HOST + ":" + SERVER_PORT)
 	fmt.Println("Waiting for client...")
+
+	rng := fname.NewGenerator()
 	mp := make(map[net.Conn]string)
-	i := 1
+
 	for {
 		// set new connected socket for the connections
 		connection, err := server.Accept()
-		mp[connection] = fmt.Sprintf("Client%v", i)
-		i++
+		phrase, err := rng.Generate()
+		mp[connection] = fmt.Sprintf(phrase)
+		
 		if err != nil {
 			fmt.Println("Error accepting: ", err.Error())
 			os.Exit(1)
