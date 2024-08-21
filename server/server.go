@@ -34,12 +34,17 @@ func main() {
 			fmt.Println("Error accepting: ", err.Error())
 			os.Exit(1)
 		}
+
 		// remote address is the client address
-		fmt.Printf("%v connected with %v remote address \n", mp[connection], connection.RemoteAddr())
+		fmt.Printf("%v connected with %v remote address \n",
+				mp[connection], connection.RemoteAddr())
 		go processClient(connection, mp)
 	}
 }
 func processClient(connection net.Conn, mp map[net.Conn]string) {
+	defer connection.Close()
+	defer delete(mp, connection)
+
 	for {
 		buffer := make([]byte, 1024)
 
@@ -47,17 +52,17 @@ func processClient(connection net.Conn, mp map[net.Conn]string) {
 		mLen, err := connection.Read(buffer)
 
 		if err != nil {
-			if err.Error() != "EOF" {
-				fmt.Println("Connection Ended", err.Error())
+			if err.Error() == "EOF" {
+				fmt.Println("Connection Ended gracefully with " + mp[connection])
+				return
 			}
+			fmt.Println("Error Occurred : ", err.Error())
 			break
 		}
 
 		fmt.Printf("%v: %v", mp[connection], string(buffer[:mLen]))
 
-		// to write to the connection
-		// _, err = connection.Write([]byte("Thanks! Got your message:" + string(buffer[:mLen])))
+		// to write to the connection for confirmation of message received
+		// _, err = connection.Write([]byte("Got message:" + string(buffer[:mLen])))
 	}
-	fmt.Print("Connection Ended")
-	connection.Close()
 }

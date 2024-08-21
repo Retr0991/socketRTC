@@ -21,6 +21,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	// close the connection just before return
+	defer connection.Close()
+
+
 	///send some data from the terminal for now
 	reader := bufio.NewReader(os.Stdin)
 	for {
@@ -28,17 +32,12 @@ func main() {
 		_, err = connection.Write([]byte(input))
 		if err != nil {
 			fmt.Println("Error writing:", err.Error())
-			break
+			return
 		}
-		// buffer := make([]byte, 1024)
-		// mLen, err := connection.Read(buffer)
-		// if err != nil {
-		// 	fmt.Println("Error :", err.Error())
-		// }
-		fmt.Println("Received")
 		if strings.ToLower(input) == "bye\n" {
 			break
 		}
 	}
-	defer connection.Close()
+
+	fmt.Println("Well, that ended well")
 }
