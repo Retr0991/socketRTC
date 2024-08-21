@@ -1,0 +1,4 @@
+github.com/splode/fname v0.4.1 h1:tRBvCEoNMKMI9veue+LZ7psUFWHWRRX+rmWhqUjzmog=
+github.com/splode/fname v0.4.1/go.mod h1:73RiaoonLZF/9E7lvIoxj/y2ZVfq7Gq2tNvPwADQx/8=
+golang.org/x/text v0.8.0 h1:57P1ETyNKtuIjB4SRd15iJxuhj8Gc416Y78H3qgMh68=
+golang.org/x/text v0.8.0/go.mod h1:e1OnstbJyHTd6l/uOt8jFFHp6TRDWZR/bV3emEE/zU8=
