@@ -2,14 +2,14 @@
 package main
 
 import (
-	"github.com/splode/fname"
 	"fmt"
 	"net"
 	"os"
+	"github.com/splode/fname"
 )
 
 const (
-	SERVER_HOST = ""
+	SERVER_HOST = "	" // check all ips from all nics
 	SERVER_PORT = "9988"
 	SERVER_TYPE = "tcp"
 )
@@ -31,9 +31,11 @@ func main() {
 	for {
 		// set new connected socket for the connections
 		connection, err := server.Accept()
+
+		// generate random name for the clients
 		phrase, err := rng.Generate()
 		mp[connection] = fmt.Sprintf(phrase)
-		
+
 		if err != nil {
 			fmt.Println("Error accepting: ", err.Error())
 			os.Exit(1)

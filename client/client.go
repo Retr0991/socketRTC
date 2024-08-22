@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	SERVER_HOST = "localhost"
+	SERVER_HOST = "tempappanme-fd88e279368e.herokuapp.com"
 	SERVER_PORT = "9988"
 	SERVER_TYPE = "tcp"
 )
@@ -34,6 +34,8 @@ func main() {
 			fmt.Println("Error writing:", err.Error())
 			return
 		}
+
+		// exit
 		if strings.ToLower(input) == "bye\n" {
 			break
 		}
