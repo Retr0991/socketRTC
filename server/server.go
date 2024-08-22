@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	SERVER_HOST = "	" // check all ips from all nics
-	SERVER_PORT = "9988"
-	SERVER_TYPE = "tcp"
+	SERVER_HOST   = "" // check all ips from all nics
+	SERVER_PORT   = "9988"
+	SERVER_TYPE   = "tcp"
+	LISTENER_PORT = "9989"
 )
 
 func main() {
@@ -21,6 +22,19 @@ func main() {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
+
+	listener, err := net.Listen(SERVER_TYPE, SERVER_HOST+":"+LISTENER_PORT)
+	if err != nil {
+		fmt.Println("Error connecting to  listener:", err.Error())
+		os.Exit(1)
+	}
+
+	listenerConnection, err := listener.Accept()
+	if err != nil {
+		fmt.Println("Error accepting Listener:", err.Error())
+		os.Exit(1)
+	}
+
 	defer server.Close()
 	fmt.Println("Listening on " + SERVER_HOST + ":" + SERVER_PORT)
 	fmt.Println("Waiting for client...")
@@ -43,11 +57,14 @@ func main() {
 
 		// remote address is the client address
 		fmt.Printf("%v connected with %v remote address \n",
-				mp[connection], connection.RemoteAddr())
-		go processClient(connection, mp)
+			mp[connection], connection.RemoteAddr())
+
+			_, err = listenerConnection.Write([]byte(fmt.Sprintf("%v connected with %v remote address \n",
+											mp[connection], connection.RemoteAddr())))
+		go processClient(connection, listenerConnection, mp)
 	}
 }
-func processClient(connection net.Conn, mp map[net.Conn]string) {
+func processClient(connection, listenerConnection net.Conn, mp map[net.Conn]string) {
 	defer connection.Close()
 	defer delete(mp, connection)
 
@@ -60,6 +77,7 @@ func processClient(connection net.Conn, mp map[net.Conn]string) {
 		if err != nil {
 			if err.Error() == "EOF" {
 				fmt.Println("Connection Ended gracefully with " + mp[connection])
+				listenerConnection.Write([]byte(fmt.Sprintf("%v left the chat", mp[connection])))
 				return
 			}
 			fmt.Println("Error Occurred : ", err.Error())
@@ -68,7 +86,7 @@ func processClient(connection net.Conn, mp map[net.Conn]string) {
 
 		fmt.Printf("%v: %v", mp[connection], string(buffer[:mLen]))
 
-		// to write to the connection for confirmation of message received
-		// _, err = connection.Write([]byte("Got message:" + string(buffer[:mLen])))
+		// to write to the listener connection
+		_, err = listenerConnection.Write([]byte(fmt.Sprintf("%v: %v", mp[connection], string(buffer[:mLen]))))
 	}
 }

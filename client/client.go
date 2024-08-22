@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	SERVER_HOST = "tempappanme-fd88e279368e.herokuapp.com"
+	SERVER_HOST = "localhost"
 	SERVER_PORT = "9988"
 	SERVER_TYPE = "tcp"
 )
