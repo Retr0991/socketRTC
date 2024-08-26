@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+
 	"github.com/splode/fname"
 )
 
@@ -15,23 +16,24 @@ const (
 	LISTENER_PORT = "9989"
 )
 
+func writeToClients(message string, clients map[net.Conn]string, currClient net.Conn) {
+	for client := range clients {
+		if client == currClient {
+			continue
+		}
+		_, err := client.Write([]byte(message))
+		if err != nil {
+			fmt.Println("Error writing to client: ", err.Error())
+			return
+		}
+	}
+}
+
 func main() {
 	fmt.Println("Server Running...")
 	server, err := net.Listen(SERVER_TYPE, SERVER_HOST+":"+SERVER_PORT)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
-		os.Exit(1)
-	}
-
-	listener, err := net.Listen(SERVER_TYPE, SERVER_HOST+":"+LISTENER_PORT)
-	if err != nil {
-		fmt.Println("Error connecting to  listener:", err.Error())
-		os.Exit(1)
-	}
-
-	listenerConnection, err := listener.Accept()
-	if err != nil {
-		fmt.Println("Error accepting Listener:", err.Error())
 		os.Exit(1)
 	}
 
@@ -58,13 +60,13 @@ func main() {
 		// remote address is the client address
 		fmt.Printf("%v connected with %v remote address \n",
 			mp[connection], connection.RemoteAddr())
+		connection.Write([]byte(fmt.Sprintf("Welcome to the chat %v\n\n", mp[connection])))
 
-			_, err = listenerConnection.Write([]byte(fmt.Sprintf("%v connected with %v remote address \n",
-											mp[connection], connection.RemoteAddr())))
-		go processClient(connection, listenerConnection, mp)
+		writeToClients(fmt.Sprintf("%v joined the chat\n", mp[connection]), mp, connection)
+		go processClient(connection, mp)
 	}
 }
-func processClient(connection, listenerConnection net.Conn, mp map[net.Conn]string) {
+func processClient(connection net.Conn, mp map[net.Conn]string) {
 	defer connection.Close()
 	defer delete(mp, connection)
 
@@ -75,18 +77,13 @@ func processClient(connection, listenerConnection net.Conn, mp map[net.Conn]stri
 		mLen, err := connection.Read(buffer)
 
 		if err != nil {
-			if err.Error() == "EOF" {
-				fmt.Println("Connection Ended gracefully with " + mp[connection])
-				listenerConnection.Write([]byte(fmt.Sprintf("%v left the chat", mp[connection])))
-				return
-			}
-			fmt.Println("Error Occurred : ", err.Error())
-			break
+			fmt.Println("Connection Ended gracefully with " + mp[connection])
+			writeToClients(fmt.Sprintf("%v left the chat\n", mp[connection]), mp, connection)
+			return
 		}
 
 		fmt.Printf("%v: %v", mp[connection], string(buffer[:mLen]))
 
-		// to write to the listener connection
-		_, err = listenerConnection.Write([]byte(fmt.Sprintf("%v: %v", mp[connection], string(buffer[:mLen]))))
+		writeToClients(fmt.Sprintf("%v: %v", mp[connection], string(buffer[:mLen])), mp, connection)
 	}
 }
