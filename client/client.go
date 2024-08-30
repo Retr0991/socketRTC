@@ -10,20 +10,34 @@ import (
 )
 
 const (
-	SERVER_HOST = "localhost"
 	SERVER_PORT = "9988"
 	SERVER_TYPE = "tcp"
 )
 
+func getMessages(connection net.Conn) {
+	for {
+		buffer := make([]byte, 1024)
+		mLen, err := connection.Read(buffer)
+
+		if err != nil {
+			fmt.Println("Error reading:", err.Error())
+			return
+		}
+
+		fmt.Print(string(buffer[:mLen]))
+	}
+}
+
 func main() {
 	//establish connection
-	connection, err := net.Dial(SERVER_TYPE, SERVER_HOST+":"+SERVER_PORT)
+	connection, err := net.Dial(SERVER_TYPE, os.Getenv("SERVER_IP")+":"+SERVER_PORT)
 	if err != nil {
 		panic(err)
 	}
 	// close the connection just before return
 	defer connection.Close()
 
+	go getMessages(connection)
 
 	///send some data from the terminal for now
 	reader := bufio.NewReader(os.Stdin)
@@ -37,9 +51,8 @@ func main() {
 
 		// exit
 		if strings.ToLower(input) == "bye\n" {
-			break
+			fmt.Println("Well, that ended well")
+			return
 		}
 	}
-
-	fmt.Println("Well, that ended well")
 }

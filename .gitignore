@@ -1,3 +1,2 @@
 client/client
-server/server
-socketRTC
+.env
