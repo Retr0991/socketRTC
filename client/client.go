@@ -1,12 +1,11 @@
-// socket-client project main.go
-package main
+package client
 
 import (
-	"bufio"
-	"fmt"
 	"net"
 	"os"
-	"strings"
+	"path/filepath"
+
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -14,45 +13,24 @@ const (
 	SERVER_TYPE = "tcp"
 )
 
-func getMessages(connection net.Conn) {
-	for {
-		buffer := make([]byte, 1024)
-		mLen, err := connection.Read(buffer)
+func CreateClient() (net.Conn, error) {
+	rootDir, _ := filepath.Abs("../")
+	godotenv.Load(filepath.Join(rootDir, ".env"))
+	SERVER_IP := os.Getenv("SERVER_IP")
 
-		if err != nil {
-			fmt.Println("Error reading:", err.Error())
-			return
-		}
-
-		fmt.Print(string(buffer[:mLen]))
-	}
-}
-
-func main() {
 	//establish connection
-	connection, err := net.Dial(SERVER_TYPE, os.Getenv("SERVER_IP")+":"+SERVER_PORT)
+	connection, err := net.Dial(SERVER_TYPE, SERVER_IP+":"+SERVER_PORT)
 	if err != nil {
 		panic(err)
 	}
-	// close the connection just before return
-	defer connection.Close()
 
-	go getMessages(connection)
+	return connection, err
+}
 
-	///send some data from the terminal for now
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		input, _ := reader.ReadString('\n')
-		_, err = connection.Write([]byte(input))
-		if err != nil {
-			fmt.Println("Error writing:", err.Error())
-			return
-		}
-
-		// exit
-		if strings.ToLower(input) == "bye\n" {
-			fmt.Println("Well, that ended well")
-			return
-		}
+// send message to the server
+func SendMessage(connection net.Conn, message string) {
+	_, err := connection.Write([]byte(message + "\n"))
+	if err != nil {
+		panic(err)
 	}
 }

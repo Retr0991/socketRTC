@@ -2,15 +2,18 @@ package main
 
 import (
 	"io"
-	"math/rand"
 	"net"
 	"os"
-	"time"
+	"path/filepath"
+	"socketRTC/client"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
+// getMessages reads messages from the server
+// return a false when error is encountered... mostly for EOF
 func getMessages(connection net.Conn) (string, bool) {
 	buffer := make([]byte, 1024)
 	mLen, err := connection.Read(buffer)
@@ -20,6 +23,7 @@ func getMessages(connection net.Conn) (string, bool) {
 	return string(buffer[:mLen]), true
 }
 
+// creates a connection to the server
 func makeConnection() (net.Conn, error) {
 	IP := os.Getenv("SERVER_IP")
 	connection, err := net.Dial("tcp", IP+":9989")
@@ -27,8 +31,22 @@ func makeConnection() (net.Conn, error) {
 }
 
 func main() {
+	rootDir, _ := filepath.Abs("../")
+	godotenv.Load(filepath.Join(rootDir, ".env"))
 	r := gin.Default()
 	r.Use(cors.Default())
+
+	// create a client instance
+	clientInstance, err := client.CreateClient()
+	if err != nil {
+		panic(err)
+	}
+
+	r.GET("/", func(c *gin.Context) {
+		c.File("index.html")
+	})
+
+	// SSE endpoint
 	r.GET("/random-string", func(c *gin.Context) {
 		connection, err := makeConnection()
 		if err != nil {
@@ -36,24 +54,28 @@ func main() {
 			return
 		}
 
+		// Stop the connection when the server disconnects
 		c.Stream(func(w io.Writer) bool {
 			message, ret := getMessages(connection)
 			c.SSEvent("message", message)
 			return ret
 		})
-		time.Sleep(60 * time.Second)
+
+		// Sleep
+		// time.Sleep(60 * time.Second)
+	})
+
+	r.POST("/send-message", func(c *gin.Context) {
+		type request struct {
+			Message string `json:"message"`
+		}
+
+		var req request
+
+		c.BindJSON(&req)
+		c.JSON(200, gin.H{"message": req.Message})
+		client.SendMessage(clientInstance, req.Message)
 	})
 
 	r.Run(":8080")
-}
-
-func generateRandomString() string {
-	time.Sleep(1 * time.Second)
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, 10)
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
-	}
-	return string(b)
 }

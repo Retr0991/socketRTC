@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,25 +13,32 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            color: white;
+            background-color: rgb(24, 22, 22);
         }
+
         #chat {
             flex: 1;
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid #000000;
             overflow-y: scroll;
         }
+
         #messageInput {
             display: flex;
             padding: 10px;
-            background-color: #f1f1f1;
-            border-top: 1px solid #ccc;
+            background-color: rgb(24, 22, 22);
+            border-top: 1px solid rgb(24, 22, 22);
         }
+
         #messageInput input {
             flex: 1;
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid rgb(24, 22, 22);
             border-radius: 4px;
+            background-color: #656161;
         }
+
         #messageInput button {
             padding: 10px;
             margin-left: 10px;
@@ -40,11 +48,13 @@
             cursor: pointer;
             border-radius: 4px;
         }
+
         #messageInput button:hover {
             background-color: #45a049;
         }
     </style>
 </head>
+
 <body>
     <div id="chat"></div>
     <div id="messageInput">
@@ -59,7 +69,7 @@
 
         const evtSource = new EventSource("http://localhost:8080/random-string");
 
-        evtSource.onmessage = function(event) {
+        evtSource.onmessage = function (event) {
             console.log(event.data);
             const message = document.createElement('div');
             message.textContent = event.data;
@@ -67,32 +77,25 @@
             chat.scrollTop = chat.scrollHeight;
         };
 
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message != "") {
+                fetch('http://localhost:8080/send-message', {
+                    method: 'POST',
+                    header: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 'message': message })              
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Message sent:', data);
+                    messageInput.value = ''; // Clear the input field after sending
+                });
+            }
+        }
 
-            // async function fetchMessage() {
-            //     const response = await fetch('http://localhost:8080/random-string', {
-            //         method: 'GET',
-            //         headers: {
-            //             'Content-Type': 'application/json'
-            //         }
-            //     });
-            //     const data = await response.json();
-            //     console.log(data);
-            //     return data.message;
-            // }   
-
-        
-
-            // async function getMessages() {
-            //     const text = await fetchMessage();
-            //     const message = document.createElement('div');
-            //     message.textContent = text;
-            //     chat.appendChild(message);
-            //     chat.scrollTop = chat.scrollHeight; // Scroll to the bottom
-            // };
-
-            // function sendMessage() {
-            //     getMessages();
-            // }
     </script>
 </body>
+
 </html>
