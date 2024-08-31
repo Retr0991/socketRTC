@@ -65,9 +65,10 @@
     <script>
         const chat = document.getElementById('chat');
         const messageInput = document.getElementById('message');
+        const API_BASE_URL = "https://realtimechat-rd4m.onrender.com";
 
 
-        const evtSource = new EventSource("http://localhost:8080/random-string");
+        const evtSource = new EventSource(`${API_BASE_URL}/random-string`);
 
         evtSource.onmessage = function (event) {
             console.log(event.data);
@@ -80,8 +81,8 @@
         function sendMessage() {
             const message = messageInput.value;
             if (message != "") {
-                fetch('http://localhost:8080/send-message', {
-                    method: 'POST',
+                fetch(`${API_BASE_URL}/send-message`, {
+                    method: 'POST', 
                     header: {
                         'Content-Type': 'application/json'
                     },

@@ -25,7 +25,7 @@ func getMessages(connection net.Conn) (string, bool) {
 
 // creates a connection to the server
 func makeConnection() (net.Conn, error) {
-	IP := os.Getenv("SERVER_IP")
+	IP := os.Getenv("SERVER_IP") // Get the server IP from the .env file
 	connection, err := net.Dial("tcp", IP+":9989")
 	return connection, err
 }
@@ -77,5 +77,11 @@ func main() {
 		client.SendMessage(clientInstance, req.Message)
 	})
 
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {				
+		port = "8080" // Default port if not set
+	}
+
+	// Start the server
+	r.Run(":" + port)
 }
