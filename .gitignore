@@ -14,3 +14,4 @@ signalling_server/dist/auth/controllers/AuthController.js
 signalling_server/dist/auth/services/AuthService.js
 signalling_server/dist/auth/utils/challengeHandler.js
 signalling_server/.pnp.*
+signalling_server/.yarn/*

@@ -1,5 +1,6 @@
 import express from 'express';
 import { AuthController } from './auth/controllers/AuthController';
+import './auth/database/index'
 
 const app = express();
 
@@ -9,10 +10,7 @@ const authController = new AuthController();
 
 // Define auth routes
 app.post('/auth/authorize', (req, res) => authController.authorize(req, res));
-app.post('/auth/createUser', (req, res) => {
-    // Handle user creation
-    res.send('User creation endpoint');
-});
+app.post('/auth/createUser', (req, res) => authController.createUser(req, res));
 app.get('/auth/checkUsername/:username', (req, res) => {
     const { username } = req.params;
     // Handle username check

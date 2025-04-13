@@ -3,32 +3,27 @@ import {
   shitfunction,
   verifyChallenge,
 } from "../utils/challengeHandler";
+import { User } from "../database/models/Users";
 
 export class AuthService {
   private challengeMapping: Map<string, string>;
-  private userPublicKeys: Map<string, CryptoKey>;
+  private userModel: typeof User;
+
   constructor() {
     this.challengeMapping = new Map<string, string>();
-    this.userPublicKeys = new Map<string, CryptoKey>();
+    this.userModel = User;
   }
 
   async sendChallenge(username: string): Promise<string> {
-    console.log("Creating challenge to user:", { username });
-    const publicKey = await this.getUserPublicKey(username);
-    console.log("Public key for user:", { publicKey });
-
+    console.log(`Creating challenge to ${username}`);
     const challenge = await generateChallenge(username);
-    console.log("Generated challenge:", { challenge });
     this.challengeMapping.set(username, challenge);
 
     return challenge;
   }
 
-  async verifyChallenge(
-    username: string,
-    signature: string
-  ): Promise<boolean> {
-    console.log("Verifying challenge response for user:", { username });
+  async verifyChallenge(username: string, signature: string): Promise<boolean> {
+    console.log(`Verifying challenge response for ${username}`);
 
     // get the challenge for the user
     const challenge = this.challengeMapping.get(username);
@@ -36,19 +31,15 @@ export class AuthService {
       console.log("No challenge found for user:", { username });
       return false;
     }
-      this.challengeMapping.delete(username); // clear challenge
-      
-      const publicKey = await this.getUserPublicKey(username);
-      if (!publicKey) {
-        console.log("No public key found for user:", { username });
-        return false;
-      }
+    this.challengeMapping.delete(username); // clear challenge
 
-    return verifyChallenge(
-      challenge,
-      signature,
-      publicKey
-    );
+    const publicKey = await this.getUserPublicKey(username);
+    if (!publicKey) {
+      console.log("No public key found for user:", { username });
+      return false;
+    }
+
+    return verifyChallenge(challenge, signature, publicKey);
   }
 
   async initiateHandshake(username: string): Promise<void> {
@@ -57,27 +48,51 @@ export class AuthService {
   }
 
   async createUser(username: string, publicKey: string): Promise<void> {
-    console.log("Creating user:", { username, publicKey });
-    // Logic to create a new user
+    try {
+      // Check if the username already exists
+      const userExists = await this.checkUsername(username);
+      if (userExists) {
+        throw new Error("Username already exists");
+      }
+
+      const user = await this.userModel.create({
+        username,
+        publicKey,
+      });
+      console.log(`User created: ${user.username}`);
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      throw new Error("User creation failed");
+    }
   }
 
   async checkUsername(username: string): Promise<boolean> {
-    console.log("Checking if username exists:", { username });
-    // Logic to check if the username exists
-    return true; // Placeholder return value
+    const user = await this.userModel.findOne({
+      where: { username },
+    });
+    if (user) return true;
+    return false;
   }
 
   private async getUserPublicKey(username: string): Promise<CryptoKey> {
     try {
-      console.log("Getting public key for user:", { username });
-      let publicKey = this.userPublicKeys.get(username);
-        if (!publicKey) {
-            const testKeyPair = await shitfunction();
-            this.userPublicKeys.set(username, testKeyPair.publicKey);
-            publicKey = this.userPublicKeys.get(username);
-            // throw new Error("Public Key not found.")
-        };
-      return publicKey!;
+      const publicKey = await this.userModel.findOne({
+        where: { username },
+        attributes: ["publicKey"],
+      });
+      if (!publicKey) {
+        throw new Error("Public Key not found.");
+      }
+      return await crypto.subtle.importKey(
+        "spki",
+        Uint8Array.from(atob(publicKey.publicKey), (c) => c.charCodeAt(0)),
+        {
+          name: "RSASSA-PKCS1-v1_5",
+          hash: { name: "SHA-256" },
+        },
+        true,
+        ["verify"]
+      );
     } catch (error: any) {
       throw error;
     }
