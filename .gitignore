@@ -1,2 +1,16 @@
 client/client
 .env
+signalling_server/.yarn/install-state.gz
+signalling_server/.yarn/sdks/integrations.yml
+signalling_server/.yarn/sdks/typescript/package.json
+signalling_server/.yarn/sdks/typescript/bin/tsc
+signalling_server/.yarn/sdks/typescript/bin/tsserver
+signalling_server/.yarn/sdks/typescript/lib/tsc.js
+signalling_server/.yarn/sdks/typescript/lib/tsserver.js
+signalling_server/.yarn/sdks/typescript/lib/tsserverlibrary.js
+signalling_server/.yarn/sdks/typescript/lib/typescript.js
+signalling_server/dist/app.js
+signalling_server/dist/auth/controllers/AuthController.js
+signalling_server/dist/auth/services/AuthService.js
+signalling_server/dist/auth/utils/challengeHandler.js
+signalling_server/.pnp.*
