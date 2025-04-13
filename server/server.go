@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"socketRTC/models"
+	"errors"
 
 	"github.com/splode/fname"
 )
@@ -16,6 +18,8 @@ const (
 )
 
 var backendConnection net.Conn
+
+var portPool = make(map[int]bool)
 
 func writeToBackend(message string) {
 	_, err := backendConnection.Write([]byte(message))
@@ -32,6 +36,44 @@ func acceptBackend(backend net.Listener) (net.Conn, error) {
 		return nil, err
 	}
 	return back, nil
+}
+
+func getFreePort() (int, error) {
+	for port, free := range portPool {
+		if free {
+			portPool[port] = false
+			return port, nil
+		}
+	}
+	return 0, errors.New("no free ports available")
+}
+
+func startSocketConnection(models.HandshakeModel) (net.Conn, error) {
+	// find emtpy port to connect new client
+	port, err := getFreePort()
+	if err != nil {
+		return nil, err
+	}
+
+	// start ephemeral listener
+	listener, err := net.Listen(SERVER_TYPE, fmt.Sprintf(":%d", port))
+	if err != nil {
+		return nil, err
+	}
+
+	// send details to signalling server
+
+	// wait for client to connect
+	conn, err := listener.Accept()
+	if err != nil {
+		listener.Close()
+		return nil, err
+	}
+
+	// close listener after client connects
+	listener.Close()
+
+	return conn, nil
 }
 
 
