@@ -1,6 +1,5 @@
 import {
   generateChallenge,
-  shitfunction,
   verifyChallenge,
 } from "../utils/challengeHandler";
 import { User } from "../database/models/Users";
